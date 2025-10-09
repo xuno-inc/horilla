@@ -122,6 +122,7 @@ def payroll_calculation(employee, start_date, end_date):
     contract = basic_pay_details["contract"]
     contract_wage = basic_pay_details["contract_wage"]
     basic_pay = basic_pay_details["basic_pay"]
+    contract_allowance_salary = basic_pay_details.get("contract_allowance_salary", 0)
     loss_of_pay = basic_pay_details["loss_of_pay"]
     paid_days = basic_pay_details["paid_days"]
     unpaid_days = basic_pay_details["unpaid_days"]
@@ -134,11 +135,14 @@ def payroll_calculation(employee, start_date, end_date):
     basic_pay = updated_basic_pay_data["compensation_amount"]
     basic_pay_deductions = updated_basic_pay_data["deductions"]
 
+    # COMMENTED OUT: Automatic loss of pay deduction from attendance/leave
+    # Employees will now get the same salary regardless of holidays or non-attendance
+    # Only manual deductions added by admin will be applied
     loss_of_pay_amount = 0
-    if not contract.deduct_leave_from_basic_pay:
-        loss_of_pay_amount = loss_of_pay
-    else:
-        basic_pay = basic_pay - loss_of_pay_amount
+    # if not contract.deduct_leave_from_basic_pay:
+    #     loss_of_pay_amount = loss_of_pay
+    # else:
+    #     basic_pay = basic_pay - loss_of_pay_amount
 
     kwargs = {
         "employee": employee,
@@ -149,6 +153,16 @@ def payroll_calculation(employee, start_date, end_date):
     }
     # basic pay will be basic_pay = basic_pay - update_compensation_amount
     allowances = calculate_allowance(**kwargs)
+
+    # Add contract allowance salary to the allowances
+    if contract_allowance_salary > 0:
+        contract_allowance = {
+            "allowance_id": None,
+            "title": "Contract Allowance",
+            "is_taxable": True,  # Contract allowance is typically taxable
+            "amount": contract_allowance_salary,
+        }
+        allowances["allowances"].append(contract_allowance)
 
     # finding the total allowance
     total_allowance = sum(allowance["amount"] for allowance in allowances["allowances"])
@@ -187,7 +201,7 @@ def payroll_calculation(employee, start_date, end_date):
         + total_post_tax_deduction
         + total_tax_deductions
         + federal_tax
-        + loss_of_pay_amount
+        # + loss_of_pay_amount  # COMMENTED OUT: No automatic attendance/leave deductions
     )
 
     net_pay = gross_pay - total_deductions

@@ -271,13 +271,17 @@ def daily_computation(employee, wage, start_date, end_date):
     ).first()
 
     unpaid_leaves = leave_data["unpaid_leaves"] - unpaid_half_leaves
-    if contract.calculate_daily_leave_amount:
-        loss_of_pay = (unpaid_leaves) * wage
-    else:
-        fixed_penalty = contract.deduction_for_one_leave_amount
-        loss_of_pay = (unpaid_leaves) * fixed_penalty
-    if contract.deduct_leave_from_basic_pay:
-        basic_pay = basic_pay - loss_of_pay
+    # COMMENTED OUT: Automatic loss of pay calculation from attendance/leave
+    # Employees will now get the same salary regardless of holidays or non-attendance
+    # Only manual deductions added by admin will be applied
+    loss_of_pay = 0
+    # if contract.calculate_daily_leave_amount:
+    #     loss_of_pay = (unpaid_leaves) * wage
+    # else:
+    #     fixed_penalty = contract.deduction_for_one_leave_amount
+    #     loss_of_pay = (unpaid_leaves) * fixed_penalty
+    # if contract.deduct_leave_from_basic_pay:
+    #     basic_pay = basic_pay - loss_of_pay
 
     return {
         "basic_pay": basic_pay,
@@ -475,14 +479,18 @@ def monthly_computation(employee, wage, start_date, end_date, *args, **kwargs):
     daily_computed_salary = get_daily_salary(wage=wage, wage_date=start_date)[
         "day_wage"
     ]
-    if contract.calculate_daily_leave_amount:
-        loss_of_pay = (unpaid_leaves) * daily_computed_salary
-    else:
-        fixed_penalty = contract.deduction_for_one_leave_amount
-        loss_of_pay = (unpaid_leaves) * fixed_penalty
+    # COMMENTED OUT: Automatic loss of pay calculation from attendance/leave
+    # Employees will now get the same salary regardless of holidays or non-attendance
+    # Only manual deductions added by admin will be applied
+    loss_of_pay = 0
+    # if contract.calculate_daily_leave_amount:
+    #     loss_of_pay = (unpaid_leaves) * daily_computed_salary
+    # else:
+    #     fixed_penalty = contract.deduction_for_one_leave_amount
+    #     loss_of_pay = (unpaid_leaves) * fixed_penalty
 
-    if contract.deduct_leave_from_basic_pay:
-        basic_pay = basic_pay - loss_of_pay
+    # if contract.deduct_leave_from_basic_pay:
+    #     basic_pay = basic_pay - loss_of_pay
     return {
         "basic_pay": basic_pay,
         "loss_of_pay": loss_of_pay,
@@ -524,6 +532,13 @@ def compute_salary_on_period(employee, start_date, end_date, wage=None):
         data = monthly_computation(employee, wage, start_date, end_date)
     data["contract_wage"] = wage
     data["contract"] = contract
+    
+    # Include contract allowance salary if available
+    if hasattr(contract, 'allowance_salary') and contract.allowance_salary:
+        data["contract_allowance_salary"] = contract.allowance_salary
+    else:
+        data["contract_allowance_salary"] = 0
+    
     return data
 
 

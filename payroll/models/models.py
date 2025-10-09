@@ -182,6 +182,37 @@ class Contract(HorillaModel):
         verbose_name=_("Pay Frequency"),
     )
     wage = models.FloatField(verbose_name=_("Basic Salary"), null=True, default=0)
+    
+    # Salary entry mode fields
+    SALARY_ENTRY_MODE_CHOICES = [
+        ("manual", _("Manual")),
+        ("net_split", _("Net Split 60/40")),
+    ]
+    salary_entry_mode = models.CharField(
+        max_length=20, 
+        choices=SALARY_ENTRY_MODE_CHOICES, 
+        default="manual",
+        verbose_name=_("Salary Entry Mode"),
+        help_text=_("Choose how to enter salary information")
+    )
+    allowance_salary = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0, 
+        blank=True, 
+        null=True,
+        verbose_name=_("Allowance Salary"),
+        help_text=_("Allowance amount (used in manual mode)")
+    )
+    net_salary = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        blank=True, 
+        null=True,
+        verbose_name=_("Net Salary"),
+        help_text=_("Net salary amount (used in net split mode)")
+    )
+    
     filing_status = models.ForeignKey(
         FilingStatus,
         on_delete=models.PROTECT,
@@ -274,6 +305,16 @@ class Contract(HorillaModel):
 
     def __str__(self) -> str:
         return f"{self.contract_name} -{self.contract_start_date} - {self.contract_end_date}"
+
+    def apply_net_split(self):
+        """
+        Apply net split calculation: Basic = 60% of Net, Allowance = 40% of Net
+        """
+        if self.net_salary is not None:
+            basic = (self.net_salary * 60) / 100
+            allow = self.net_salary - basic
+            self.wage = round(basic, 2)
+            self.allowance_salary = round(allow, 2)
 
     def clean(self):
         if self.contract_end_date is not None:

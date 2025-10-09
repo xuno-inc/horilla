@@ -86,10 +86,58 @@
                     <span class="oh-timeoff-modal__stat-count">{{contract.get_wage_type_display}}</span>
                 </div>
                 <div class="oh-timeoff-modal__stat" style="margin-left: 20px;">
-                    <span class="oh-timeoff-modal__stat-title">{% trans "Wage" %}</span>
-                    <span class="oh-timeoff-modal__stat-count">{{contract.wage}}</span>
+                    <span class="oh-timeoff-modal__stat-title">{% trans "Salary Entry Mode" %}</span>
+                    <span class="oh-timeoff-modal__stat-count">{{contract.get_salary_entry_mode_display}}</span>
                 </div>
             </div>
+            
+            <!-- Salary Information Section -->
+            <div class="oh-timeoff-modal__stats-container mt-3 mb-3">
+                {% if contract.salary_entry_mode == 'manual' %}
+                    <div class="oh-timeoff-modal__stat">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Basic Salary" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.wage}}</span>
+                    </div>
+                    <div class="oh-timeoff-modal__stat" style="margin-left: 20px;">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Allowance Salary" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.allowance_salary}}</span>
+                    </div>
+                {% elif contract.salary_entry_mode == 'net_split' %}
+                    <div class="oh-timeoff-modal__stat">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Net Salary" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.net_salary}}</span>
+                    </div>
+                    <div class="oh-timeoff-modal__stat" style="margin-left: 20px;">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Computed Basic (60%)" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.wage}}</span>
+                    </div>
+                {% else %}
+                    <!-- Fallback for legacy contracts -->
+                    <div class="oh-timeoff-modal__stat">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Basic Salary" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.wage}}</span>
+                    </div>
+                    {% if contract.allowance_salary %}
+                    <div class="oh-timeoff-modal__stat" style="margin-left: 20px;">
+                        <span class="oh-timeoff-modal__stat-title">{% trans "Allowance Salary" %}</span>
+                        <span class="oh-timeoff-modal__stat-count">{{contract.allowance_salary}}</span>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            
+            {% if contract.salary_entry_mode == 'net_split' %}
+            <div class="oh-timeoff-modal__stats-container mt-3 mb-3">
+                <div class="oh-timeoff-modal__stat">
+                    <span class="oh-timeoff-modal__stat-title">{% trans "Computed Allowance (40%)" %}</span>
+                    <span class="oh-timeoff-modal__stat-count">{{contract.allowance_salary}}</span>
+                </div>
+                <div class="oh-timeoff-modal__stat" style="margin-left: 20px;">
+                    <span class="oh-timeoff-modal__stat-title">{% trans "Total Salary" %}</span>
+                    <span class="oh-timeoff-modal__stat-count">{{contract.net_salary}}</span>
+                </div>
+            </div>
+            {% endif %}
             <div class="oh-timeoff-modal__stats-container mt-3 mb-3">
                 <div class="oh-timeoff-modal__stat">
                     {% if contract.calculate_daily_leave_amount %}

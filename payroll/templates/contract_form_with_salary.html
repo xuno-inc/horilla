@@ -1,0 +1,208 @@
+{% load widget_tweaks %} {% load i18n %}
+
+<div class="oh-general__tab-target oh-profile-section" id="personal">
+  <div class="oh-payslip__header">
+    <div class="oh-payslip__header-left">
+      <div class="oh-payroll__component-title">{{ form.verbose_name }}</div>
+    </div>
+    <div class="oh-payslip__header-right">{{ form.contract_status }}</div>
+  </div>
+  <div class="oh-profile-section__card">
+    <div class="row">
+      <div class="col-12">{{form.non_field_errors}}</div>
+
+      {% for field in form.visible_fields %}
+        {% if field.name != 'contract_status' and field.name != 'salary_entry_mode' and field.name != 'wage' and field.name != 'allowance_salary' and field.name != 'net_salary' %}
+          {% if field.name == 'note' %}
+            <div class="col-12 col-md-12">
+              <div class="oh-label__info" for="id_{{ field.name }}">
+                <label class="oh-label {% if field.field.required %} required-star{% endif %}" for="id_{{ field.name }}">{% trans field.label %}</label>
+                {% if field.help_text != "" %}
+                <span class="oh-info mr-2" title="{{ field.help_text|safe }}"></span>
+                {% endif %}
+              </div>
+              {% if field.field.widget.input_type == "checkbox" %}
+                {{ field.errors }}
+                <div class="oh-switch" style="width: 30px">
+                  {{ field|add_class:"oh-switch__checkbox" }}
+                </div>
+              {% else %}
+                {{ field|add_class:"form-control" }}
+              {% endif %}
+              {{field.errors}}
+            </div>
+          {% else %}
+            <div class="col-12 col-md-6">
+              <div class="oh-label__info" for="id_{{ field.name }}">
+                <label class="oh-label {% if field.field.required %} required-star{% endif %}" for="id_{{ field.name }}">{% trans field.label %}</label>
+                {% if field.help_text != "" %}
+                <span class="oh-info mr-2" title="{{ field.help_text|safe }}"></span>
+                {% endif %}
+              </div>
+              {% if field.field.widget.input_type == "checkbox" %}
+                {{ field.errors }}
+                <div class="oh-switch" style="width: 30px">
+                  {{ field|add_class:"oh-switch__checkbox" }}
+                </div>
+              {% else %}
+                {{ field|add_class:"form-control" }}
+              {% endif %}
+              {{field.errors}}
+            </div>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      <!-- Salary Entry Mode Section -->
+      <div class="col-12">
+        <div class="oh-label__info">
+          <label class="oh-label required-star" for="id_salary_entry_mode"
+            >{% trans "Salary Entry Mode" %}</label
+          >
+          <span
+            class="oh-info mr-2"
+            title="{% trans 'Choose how to enter salary information' %}"
+          ></span>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="salary_entry_mode" id="id_salary_entry_mode_0" value="manual" {% if form.salary_entry_mode.value == 'manual' or not form.salary_entry_mode.value %}checked{% endif %}>
+          <label class="form-check-label" for="id_salary_entry_mode_0">
+            {% trans "Manual (Basic + Allowance)" %}
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="salary_entry_mode" id="id_salary_entry_mode_1" value="net_split" {% if form.salary_entry_mode.value == 'net_split' %}checked{% endif %}>
+          <label class="form-check-label" for="id_salary_entry_mode_1">
+            {% trans "Net Split (60% / 40%)" %}
+          </label>
+        </div>
+        {{ form.salary_entry_mode.errors }}
+      </div>
+
+      <!-- Manual Mode Fields -->
+      <div class="col-12 col-md-6" id="manual-fields">
+        <div class="oh-label__info">
+          <label class="oh-label required-star" for="id_wage"
+            >{% trans "Basic Salary" %}</label
+          >
+        </div>
+        {{ form.wage|add_class:"form-control" }} {{ form.wage.errors }}
+      </div>
+
+      <div class="col-12 col-md-6" id="manual-allowance-fields">
+        <div class="oh-label__info">
+          <label class="oh-label required-star" for="id_allowance_salary"
+            >{% trans "Allowance Salary" %}</label
+          >
+          <span
+            class="oh-info mr-2"
+            title="{% trans 'Allowance amount (used in manual mode)' %}"
+          ></span>
+        </div>
+        {{ form.allowance_salary|add_class:"form-control" }} {{form.allowance_salary.errors }}
+      </div>
+
+      <!-- Net Split Mode Fields -->
+      <div class="col-12 col-md-6" id="net-split-fields" style="display: none">
+        <div class="oh-label__info">
+          <label class="oh-label required-star" for="id_net_salary"
+            >{% trans "Net Salary" %}</label
+          >
+          <span
+            class="oh-info mr-2"
+            title="{% trans 'Net salary amount (used in net split mode)' %}"
+          ></span>
+        </div>
+        {{ form.net_salary|add_class:"form-control" }} {{ form.net_salary.errors }}
+      </div>
+
+      <!-- Net Split Preview -->
+      <div class="col-12 col-md-6" id="net-split-preview" style="display: none">
+        <div class="oh-label__info">
+          <label class="oh-label">{% trans "Preview" %}</label>
+        </div>
+        <div class="alert alert-info">
+          <div id="preview-basic">
+            <strong>{% trans "Basic (60%)" %}:</strong>
+            <span id="preview-basic-value">0.00</span>
+          </div>
+          <div id="preview-allowance">
+            <strong>{% trans "Allowance (40%)" %}:</strong>
+            <span id="preview-allowance-value">0.00</span>
+          </div>
+          <small class="text-muted"
+            >{% trans "Basic = 60% of Net, Allowance = 40% of Net" %}</small
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-row-reverse">
+      <button
+        type="submit"
+        class="oh-btn oh-btn--secondary mt-2 mr-0 pl-4 pr-5 oh-btn--w-100-resp"
+      >
+        {% trans "Save" %}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const salaryModeRadios = document.querySelectorAll(
+      'input[name="salary_entry_mode"]'
+    );
+    const manualFields = document.getElementById("manual-fields");
+    const manualAllowanceFields = document.getElementById(
+      "manual-allowance-fields"
+    );
+    const netSplitFields = document.getElementById("net-split-fields");
+    const netSplitPreview = document.getElementById("net-split-preview");
+    const netSalaryInput = document.getElementById("id_net_salary");
+    const previewBasicValue = document.getElementById("preview-basic-value");
+    const previewAllowanceValue = document.getElementById(
+      "preview-allowance-value"
+    );
+
+    function toggleSalaryMode() {
+      const selectedMode = document.querySelector(
+        'input[name="salary_entry_mode"]:checked'
+      ).value;
+
+      if (selectedMode === "manual") {
+        manualFields.style.display = "block";
+        manualAllowanceFields.style.display = "block";
+        netSplitFields.style.display = "none";
+        netSplitPreview.style.display = "none";
+      } else if (selectedMode === "net_split") {
+        manualFields.style.display = "none";
+        manualAllowanceFields.style.display = "none";
+        netSplitFields.style.display = "block";
+        netSplitPreview.style.display = "block";
+      }
+    }
+
+    function updateNetSplitPreview() {
+      const netSalary = parseFloat(netSalaryInput.value) || 0;
+      const basic = Math.round(netSalary * 0.6 * 100) / 100;
+      const allowance = Math.round((netSalary - basic) * 100) / 100;
+
+      previewBasicValue.textContent = basic.toFixed(2);
+      previewAllowanceValue.textContent = allowance.toFixed(2);
+    }
+
+    // Add event listeners
+    salaryModeRadios.forEach((radio) => {
+      radio.addEventListener("change", toggleSalaryMode);
+    });
+
+    if (netSalaryInput) {
+      netSalaryInput.addEventListener("input", updateNetSplitPreview);
+    }
+
+    // Initialize on page load
+    toggleSalaryMode();
+    updateNetSplitPreview();
+  });
+</script>

@@ -30,6 +30,32 @@ class ContractForm(ModelForm):
     verbose_name = _("Contract")
     contract_start_date = forms.DateField()
     contract_end_date = forms.DateField(required=False)
+    
+    # Salary entry mode fields
+    salary_entry_mode = forms.ChoiceField(
+        choices=[
+            ("manual", _("Manual (Basic + Allowance)")),
+            ("net_split", _("Net Split (60% / 40%)")),
+        ],
+        widget=forms.RadioSelect,
+        initial="manual",
+        label=_("Salary Entry Mode"),
+        help_text=_("Choose how to enter salary information")
+    )
+    allowance_salary = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=False,
+        label=_("Allowance Salary"),
+        help_text=_("Allowance amount (used in manual mode)")
+    )
+    net_salary = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=False,
+        label=_("Net Salary"),
+        help_text=_("Net salary amount (used in net split mode)")
+    )
 
     class Meta:
         """
@@ -87,7 +113,7 @@ class ContractForm(ModelForm):
         Render the form fields as HTML table rows with Bootstrap styling.
         """
         context = {"form": self}
-        table_html = render_to_string("contract_form.html", context)
+        table_html = render_to_string("contract_form_with_salary.html", context)
         return table_html
 
     def get_dynamic_hx_post_url(self, instance):
@@ -95,6 +121,62 @@ class ContractForm(ModelForm):
         Render the url for contract status update through hx request
         """
         return f"/payroll/update-contract-status/{instance.pk}"
+
+    def clean(self):
+        """
+        Validate salary entry mode logic
+        """
+        cleaned_data = super().clean()
+        salary_entry_mode = cleaned_data.get('salary_entry_mode')
+        wage = cleaned_data.get('wage')
+        allowance_salary = cleaned_data.get('allowance_salary')
+        net_salary = cleaned_data.get('net_salary')
+        
+        if salary_entry_mode == "manual":
+            # Manual mode: basic_salary and allowance_salary are required
+            if wage is None:
+                raise forms.ValidationError({
+                    'wage': _("Basic salary is required in manual mode.")
+                })
+            if allowance_salary is None:
+                raise forms.ValidationError({
+                    'allowance_salary': _("Allowance salary is required in manual mode.")
+                })
+            
+            # Ensure non-negative values
+            if wage is not None and wage < 0:
+                raise forms.ValidationError({
+                    'wage': _("Basic salary must be non-negative.")
+                })
+            if allowance_salary is not None and allowance_salary < 0:
+                raise forms.ValidationError({
+                    'allowance_salary': _("Allowance salary must be non-negative.")
+                })
+            
+            # Clear net_salary for manual mode
+            cleaned_data['net_salary'] = None
+            
+        elif salary_entry_mode == "net_split":
+            # Net split mode: net_salary is required
+            if net_salary is None:
+                raise forms.ValidationError({
+                    'net_salary': _("Net salary is required in net split mode.")
+                })
+            
+            # Ensure non-negative net salary
+            if net_salary is not None and net_salary < 0:
+                raise forms.ValidationError({
+                    'net_salary': _("Net salary must be non-negative.")
+                })
+            
+            # Compute basic and allowance from net salary
+            if net_salary is not None:
+                basic = round((net_salary * 60) / 100, 2)
+                allowance = round(net_salary - basic, 2)
+                cleaned_data['wage'] = basic
+                cleaned_data['allowance_salary'] = allowance
+        
+        return cleaned_data
 
 
 class ReimbursementRequestCommentForm(ModelForm):
