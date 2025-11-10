@@ -115,14 +115,19 @@ WSGI_APPLICATION = "horilla.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# Database
+# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
 if env("DATABASE_URL", default=None):
     DATABASES = {
         "default": env.db(),
     }
+    DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
 else:
+    db_engine = env("DB_ENGINE", default="django.db.backends.sqlite3")  # ADD THIS LINE
     DATABASES = {
         "default": {
-            "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
+            "ENGINE": db_engine,  # Use the variable
             "NAME": env(
                 "DB_NAME",
                 default=os.path.join(
@@ -134,14 +139,17 @@ else:
             "PASSWORD": env("DB_PASSWORD", default=""),
             "HOST": env("DB_HOST", default=""),
             "PORT": env("DB_PORT", default=""),
-            "CONN_MAX_AGE": env("DB_CONN_MAX_AGE", default=60) if "postgresql" in db_engine else 0,
         }
     }
-    if "postgresql" in db_engine:
+    if "postgresql" in db_engine:  # Now this will work
+        DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
         DATABASES["default"]["OPTIONS"] = {
             "connect_timeout": 10,
         }
+    else:
+        DATABASES["default"]["CONN_MAX_AGE"] = 0
 
+CONN_HEALTH_CHECKS = True
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
