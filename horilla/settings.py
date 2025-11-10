@@ -121,10 +121,10 @@ if env("DATABASE_URL", default=None):
     }
     DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
 else:
-    db_engine = env("DB_ENGINE", default="django.db.backends.sqlite3")  # ADD THIS LINE
+    db_engine = env("DB_ENGINE", default="django.db.backends.sqlite3")
     DATABASES = {
         "default": {
-            "ENGINE": db_engine,  # Use the variable
+            "ENGINE": db_engine,
             "NAME": env(
                 "DB_NAME",
                 default=os.path.join(
@@ -138,7 +138,7 @@ else:
             "PORT": env("DB_PORT", default=""),
         }
     }
-    if "postgresql" in db_engine:  # Now this will work
+    if "postgresql" in db_engine:
         DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
         DATABASES["default"]["OPTIONS"] = {
             "connect_timeout": 10,
@@ -210,7 +210,7 @@ DJANGO_NOTIFICATIONS_CONFIG = {
     "SOFT_DELETE": True,
     "USE_WATCHED": True,
     "NOTIFICATIONS_STORAGE": "notifications.storage.DatabaseStorage",
-    "TEMPLATE": "notifications.html",  # Add this line
+    "TEMPLATE": "notifications.html",
 }
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
