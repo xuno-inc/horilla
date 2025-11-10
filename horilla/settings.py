@@ -115,9 +115,6 @@ WSGI_APPLICATION = "horilla.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 if env("DATABASE_URL", default=None):
     DATABASES = {
         "default": env.db(),
@@ -150,6 +147,8 @@ else:
         DATABASES["default"]["CONN_MAX_AGE"] = 0
 
 CONN_HEALTH_CHECKS = True
+
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
