@@ -86,6 +86,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "horilla.middleware.CloseDBConnectionMiddleware",
 ]
 
 ROOT_URLCONF = "horilla.urls"
@@ -133,6 +134,10 @@ else:
             "PASSWORD": env("DB_PASSWORD", default=""),
             "HOST": env("DB_HOST", default=""),
             "PORT": env("DB_PORT", default=""),
+            "CONN_MAX_AGE": env("DB_CONN_MAX_AGE", default=60),  # Connection persistence in seconds
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
         }
     }
 
