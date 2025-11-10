@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8000
 
-RUN ./manage.py makemigrations && ./manage.py compilemessages
+RUN ./manage.py compilemessages
 
 # CMD ["python3", "manage.py", "runserver"]
 

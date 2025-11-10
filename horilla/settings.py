@@ -134,12 +134,13 @@ else:
             "PASSWORD": env("DB_PASSWORD", default=""),
             "HOST": env("DB_HOST", default=""),
             "PORT": env("DB_PORT", default=""),
-            "CONN_MAX_AGE": env("DB_CONN_MAX_AGE", default=60),  # Connection persistence in seconds
-            "OPTIONS": {
-                "connect_timeout": 10,
-            },
+            "CONN_MAX_AGE": env("DB_CONN_MAX_AGE", default=60) if "postgresql" in db_engine else 0,
         }
     }
+    if "postgresql" in db_engine:
+        DATABASES["default"]["OPTIONS"] = {
+            "connect_timeout": 10,
+        }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
