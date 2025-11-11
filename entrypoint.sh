@@ -14,5 +14,6 @@ gunicorn --bind 0.0.0.0:8000 \
   --timeout 120 \
   --graceful-timeout 30 \
   --keep-alive 5 \
+  --forwarded-allow-ips='*' \
   horilla.wsgi:application
 

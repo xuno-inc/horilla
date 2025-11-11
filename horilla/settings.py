@@ -258,6 +258,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# IMPORTANT: This must be set always, not just in production
+# Debug is set to true, so this must be set outside the not condition
+# Traefik/reverse proxy needs this to work correctly
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+
 # Production settings
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
