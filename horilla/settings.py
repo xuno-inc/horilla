@@ -87,6 +87,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "horilla.middleware.CloseDBConnectionMiddleware",
+    "horilla.middleware.ThreadDBConnectionMiddleware",
 ]
 
 ROOT_URLCONF = "horilla.urls"
@@ -119,7 +120,15 @@ if env("DATABASE_URL", default=None):
     DATABASES = {
         "default": env.db(),
     }
-    DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
+    DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=300)
+    if "postgresql" in DATABASES["default"].get("ENGINE", ""):
+        DATABASES["default"]["OPTIONS"] = {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
 else:
     db_engine = env("DB_ENGINE", default="django.db.backends.sqlite3")
     DATABASES = {
@@ -139,9 +148,13 @@ else:
         }
     }
     if "postgresql" in db_engine:
-        DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=60)
+        DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=300)
         DATABASES["default"]["OPTIONS"] = {
             "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
         }
     else:
         DATABASES["default"]["CONN_MAX_AGE"] = 0
