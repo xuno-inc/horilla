@@ -86,6 +86,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "horilla.middleware.CloseDBConnectionMiddleware",
+    "horilla.middleware.ThreadDBConnectionMiddleware",
 ]
 
 ROOT_URLCONF = "horilla.urls"
@@ -118,10 +120,20 @@ if env("DATABASE_URL", default=None):
     DATABASES = {
         "default": env.db(),
     }
+    DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=300)
+    if "postgresql" in DATABASES["default"].get("ENGINE", ""):
+        DATABASES["default"]["OPTIONS"] = {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
 else:
+    db_engine = env("DB_ENGINE", default="django.db.backends.sqlite3")
     DATABASES = {
         "default": {
-            "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
+            "ENGINE": db_engine,
             "NAME": env(
                 "DB_NAME",
                 default=os.path.join(
@@ -135,6 +147,20 @@ else:
             "PORT": env("DB_PORT", default=""),
         }
     }
+    if "postgresql" in db_engine:
+        DATABASES["default"]["CONN_MAX_AGE"] = env("DB_CONN_MAX_AGE", default=300)
+        DATABASES["default"]["OPTIONS"] = {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
+    else:
+        DATABASES["default"]["CONN_MAX_AGE"] = 0
+
+CONN_HEALTH_CHECKS = True
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -197,7 +223,7 @@ DJANGO_NOTIFICATIONS_CONFIG = {
     "SOFT_DELETE": True,
     "USE_WATCHED": True,
     "NOTIFICATIONS_STORAGE": "notifications.storage.DatabaseStorage",
-    "TEMPLATE": "notifications.html",  # Add this line
+    "TEMPLATE": "notifications.html",
 }
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
@@ -231,6 +257,12 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+# IMPORTANT: This must be set always, not just in production
+# Debug is set to true, so this must be set outside the not condition
+# Traefik/reverse proxy needs this to work correctly
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Production settings
 if not DEBUG:
